@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About — Al-Quran</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#0d3b2e"/>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">☽ Al-Quran</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="surah.html">Surahs</a></li>
+      <li><a href="reader.html">Reader</a></li>
+      <li><a href="search.html">Search</a></li>
+      <li><a href="about.html" class="active">About</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <h1>About This Project</h1>
+    <p>A simple, clean Quran reading experience</p>
+  </div>
+
+  <div class="about-content">
+
+    <div class="about-card">
+      <h2>☽ About Al-Quran Website</h2>
+      <p>This is a simple, open-source Quran website built with pure HTML, CSS, and vanilla JavaScript. The goal is to provide a clean and respectful reading experience for the Noble Quran.</p>
+      <p>The site includes the full Arabic text of the Quran alongside English translations, a surah browser, and a keyword search tool.</p>
+    </div>
+
+    <div class="about-card">
+      <h2>📡 Data Source</h2>
+      <p>All Quran content is fetched live from <a href="https://alquran.cloud" target="_blank">AlQuran.Cloud</a> — a free, open-source RESTful Quran API maintained by the community.</p>
+      <p>The API provides Arabic text, multiple translations, transliterations, audio editions, and more. No API key is required.</p>
+      <p><strong>API Base URL:</strong> <code style="background:#f0f0f0;padding:2px 6px;border-radius:3px;">https://api.alquran.cloud/v1/</code></p>
+    </div>
+
+    <div class="about-card">
+      <h2>📖 Translations Used</h2>
+      <p><strong>Muhammad Asad</strong> — A modern, scholarly translation known for its depth and insight.</p>
+      <p><strong>Pickthall</strong> — One of the earliest and most respected English translations.</p>
+      <p><strong>Sahih International</strong> — A widely used contemporary translation focused on accuracy.</p>
+    </div>
+
+    <div class="about-card">
+      <h2>🖋️ Fonts</h2>
+      <p>Arabic text is rendered using the <a href="https://fonts.google.com/specimen/Amiri" target="_blank">Amiri</a> typeface — a classical Arabic font inspired by the renowned Bulaq Press style.</p>
+      <p>English headings use <a href="https://fonts.google.com/specimen/Cinzel" target="_blank">Cinzel</a>, a font rooted in classical Roman inscriptions, chosen for its timeless elegance.</p>
+    </div>
+
+    <div class="about-card">
+      <h2>⚙️ Built With</h2>
+      <p>Pure <strong>HTML5</strong>, <strong>CSS3</strong>, and vanilla <strong>JavaScript</strong>. No frameworks. No build tools. Just open the files in a browser.</p>
+      <p>The Fetch API is used to retrieve Quran data from AlQuran.Cloud on each page load.</p>
+    </div>
+
+    <div class="about-card" style="text-align:center;">
+      <h2>🕌 A Note of Intention</h2>
+      <p style="font-style:italic;font-size:1rem;color:#333;line-height:1.9;">
+        This project is built with respect and humility.<br/>
+        May it be of benefit to all who seek knowledge and reflection.
+      </p>
+      <div style="font-family:'Amiri',serif;font-size:1.8rem;direction:rtl;color:#1a5c45;margin-top:1rem;">
+        وَقُل رَّبِّ زِدْنِي عِلْمًا
+      </div>
+      <p style="font-size:0.85rem;color:#888;margin-top:0.5rem;">"And say: My Lord, increase me in knowledge." — Quran 20:114</p>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>Quran data provided by <a href="https://alquran.cloud" target="_blank">AlQuran.Cloud</a> — a free and open source Quran API.</p>
+    <p style="margin-top:0.5rem;color:#888;">Built with ☽ and reverence</p>
+  </footer>
+
+  <button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      document.getElementById('back-top').style.display = window.scrollY > 300 ? 'block' : 'none';
+    });
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+    const offBanner = document.createElement('div');
+    offBanner.style.cssText = 'display:none;position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:#fff;text-align:center;padding:0.6rem;font-size:0.85rem;z-index:999;';
+    offBanner.textContent = '⚠️ You are offline — showing cached content';
+    document.body.appendChild(offBanner);
+    window.addEventListener('offline', () => offBanner.style.display = 'block');
+    window.addEventListener('online', () => offBanner.style.display = 'none');
+    if (!navigator.onLine) offBanner.style.display = 'block';
+  </script>
+</body>
+</html>

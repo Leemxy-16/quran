@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Surah List — Al-Quran</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#0d3b2e"/>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">☽ Al-Quran</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="surah.html" class="active">Surahs</a></li>
+      <li><a href="reader.html">Reader</a></li>
+      <li><a href="search.html">Search</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <h1>All Surahs</h1>
+    <p>114 chapters of the Noble Quran</p>
+  </div>
+
+  <div class="container">
+    <div class="search-bar">
+      <input type="text" id="filter-input" placeholder="Filter by name..." oninput="filterSurahs()" />
+    </div>
+
+    <div id="surah-grid" class="surah-grid">
+      <div class="loading"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Quran data provided by <a href="https://alquran.cloud" target="_blank">AlQuran.Cloud</a></p>
+  </footer>
+
+  <button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script>
+    let allSurahs = [];
+
+    window.addEventListener('scroll', () => {
+      document.getElementById('back-top').style.display = window.scrollY > 300 ? 'block' : 'none';
+    });
+
+    async function loadSurahs() {
+      const grid = document.getElementById('surah-grid');
+      try {
+        const res = await fetch('https://api.alquran.cloud/v1/surah');
+        const data = await res.json();
+        allSurahs = data.data;
+        renderSurahs(allSurahs);
+      } catch {
+        grid.innerHTML = '<p style="color:#888;text-align:center;padding:2rem;">Failed to load surahs. Please check your connection.</p>';
+      }
+    }
+
+    function renderSurahs(surahs) {
+      const grid = document.getElementById('surah-grid');
+      if (surahs.length === 0) {
+        grid.innerHTML = '<p style="color:#888;text-align:center;padding:2rem;">No surahs found.</p>';
+        return;
+      }
+      grid.innerHTML = surahs.map(s => `
+        <a class="surah-card" href="reader.html?surah=${s.number}">
+          <div class="surah-num">${s.number}</div>
+          <div class="surah-info">
+            <div class="surah-name-en">${s.englishName}</div>
+            <div class="surah-meta">${s.englishNameTranslation} &bull; ${s.numberOfAyahs} verses &bull; ${s.revelationType}</div>
+          </div>
+          <div class="surah-name-ar">${s.name}</div>
+        </a>
+      `).join('');
+    }
+
+    function filterSurahs() {
+      const q = document.getElementById('filter-input').value.toLowerCase();
+      const filtered = allSurahs.filter(s =>
+        s.englishName.toLowerCase().includes(q) ||
+        s.englishNameTranslation.toLowerCase().includes(q) ||
+        String(s.number).includes(q)
+      );
+      renderSurahs(filtered);
+    }
+
+    loadSurahs();
+
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+    const offBanner = document.createElement('div');
+    offBanner.style.cssText = 'display:none;position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:#fff;text-align:center;padding:0.6rem;font-size:0.85rem;z-index:999;';
+    offBanner.textContent = '⚠️ You are offline — showing cached content';
+    document.body.appendChild(offBanner);
+    window.addEventListener('offline', () => offBanner.style.display = 'block');
+    window.addEventListener('online', () => offBanner.style.display = 'none');
+    if (!navigator.onLine) offBanner.style.display = 'block';
+  </script>
+</body>
+</html>

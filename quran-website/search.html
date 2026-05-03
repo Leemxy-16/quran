@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Search — Al-Quran</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">☽ Al-Quran</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="surah.html">Surahs</a></li>
+      <li><a href="reader.html">Reader</a></li>
+      <li><a href="search.html" class="active">Search</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- SEARCH HERO -->
+  <div class="search-hero">
+    <h1>Search the Quran</h1>
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Search for a word or phrase..." />
+      <button class="btn btn-gold" onclick="runSearch()">Search</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="results-info" style="color:#888;font-size:0.9rem;margin-bottom:1.2rem;"></div>
+    <div id="results-container"></div>
+  </div>
+
+  <footer>
+    <p>Quran data provided by <a href="https://alquran.cloud" target="_blank">AlQuran.Cloud</a></p>
+  </footer>
+
+  <button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script>
+    window.addEventListener('scroll', () => {
+      document.getElementById('back-top').style.display = window.scrollY > 300 ? 'block' : 'none';
+    });
+
+    // Allow Enter key to trigger search
+    document.getElementById('search-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') runSearch();
+    });
+
+    async function runSearch() {
+      const q = document.getElementById('search-input').value.trim();
+      if (!q) return;
+
+      const container = document.getElementById('results-container');
+      const info = document.getElementById('results-info');
+      container.innerHTML = '<div class="loading"></div>';
+      info.textContent = '';
+
+      try {
+        const res = await fetch(`https://api.alquran.cloud/v1/search/${encodeURIComponent(q)}/all/en.asad`);
+        const data = await res.json();
+
+        if (!data.data || data.data.count === 0) {
+          info.textContent = `No results found for "${q}"`;
+          container.innerHTML = '<p style="color:#888;text-align:center;padding:2rem;font-style:italic;">Try a different word or phrase.</p>';
+          return;
+        }
+
+        const matches = data.data.matches;
+        info.textContent = `Found ${data.data.count} result(s) for "${q}"`;
+
+        container.innerHTML = matches.map(m => `
+          <a class="result-card" href="reader.html?surah=${m.surah.number}">
+            <div class="result-ref">${m.surah.englishName} — ${m.surah.number}:${m.numberInSurah}</div>
+            <div class="result-text">${m.text}</div>
+          </a>
+        `).join('');
+      } catch {
+        container.innerHTML = '<p style="color:#888;text-align:center;padding:2rem;">Search failed. Please check your connection.</p>';
+      }
+    }
+  </script>
+</body>
+</html>

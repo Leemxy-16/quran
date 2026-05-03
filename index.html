@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Al-Quran — The Noble Book</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#0d3b2e"/>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <a href="index.html" class="nav-logo">☽ Al-Quran</a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="surah.html">Surahs</a></li>
+      <li><a href="reader.html">Reader</a></li>
+      <li><a href="search.html">Search</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+    <h1>The Noble Quran</h1>
+    <p>Read, explore, and reflect upon the words of Allah — available in Arabic with English translation.</p>
+    <a href="surah.html" class="hero-btn">Browse Surahs</a>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-number">114</div>
+      <div class="stat-label">Surahs</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">6,236</div>
+      <div class="stat-label">Ayahs</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">30</div>
+      <div class="stat-label">Juz</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">86</div>
+      <div class="stat-label">Meccan</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">28</div>
+      <div class="stat-label">Medinan</div>
+    </div>
+  </div>
+
+  <!-- VERSE OF THE DAY -->
+  <section class="votd-section">
+    <h2 class="section-title">Verse of the Day <span></span></h2>
+    <div class="votd-card" id="votd">
+      <div class="loading"></div>
+    </div>
+  </section>
+
+  <!-- QUICK LINKS -->
+  <div class="quick-links">
+    <a href="surah.html" class="ql-card">
+      <span class="ql-icon">📖</span>
+      <h3>Surah List</h3>
+      <p>Browse all 114 chapters of the Quran</p>
+    </a>
+    <a href="reader.html" class="ql-card">
+      <span class="ql-icon">🕌</span>
+      <h3>Quran Reader</h3>
+      <p>Read with Arabic text and translation</p>
+    </a>
+    <a href="search.html" class="ql-card">
+      <span class="ql-icon">🔍</span>
+      <h3>Search</h3>
+      <p>Search for words or phrases</p>
+    </a>
+    <a href="about.html" class="ql-card">
+      <span class="ql-icon">ℹ️</span>
+      <h3>About</h3>
+      <p>Learn about this project and sources</p>
+    </a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Quran data provided by <a href="https://alquran.cloud" target="_blank">AlQuran.Cloud</a> — a free and open source Quran API.</p>
+    <p style="margin-top:0.5rem; color:#888;">Built with ☽ and reverence</p>
+  </footer>
+
+  <button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script>
+    // Back to top button
+    window.addEventListener('scroll', () => {
+      document.getElementById('back-top').style.display = window.scrollY > 300 ? 'block' : 'none';
+    });
+
+    // Verse of the Day — random ayah based on today's date
+    async function loadVerseOfDay() {
+      const today = new Date();
+      const surahNum = (today.getDate() % 114) + 1;
+      const el = document.getElementById('votd');
+      try {
+        const res = await fetch(`https://api.alquran.cloud/v1/surah/${surahNum}/editions/quran-simple,en.asad`);
+        const data = await res.json();
+        const arabicAyahs = data.data[0].ayahs;
+        const englishAyahs = data.data[1].ayahs;
+        const idx = today.getMonth() % arabicAyahs.length;
+        const arabic = arabicAyahs[idx].text;
+        const english = englishAyahs[idx].text;
+        const ref = `Surah ${data.data[1].englishName} — ${surahNum}:${idx + 1}`;
+        el.innerHTML = `
+          <div class="votd-arabic">${arabic}</div>
+          <div class="votd-translation">${english}</div>
+          <div class="votd-ref">${ref}</div>
+        `;
+      } catch {
+        el.innerHTML = '<p style="color:#888;padding:2rem;">Could not load verse. Please check your connection.</p>';
+      }
+    }
+
+    loadVerseOfDay();
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        // Once SW is active, trigger background caching of all surahs
+        if (reg.active) {
+          reg.active.postMessage('CACHE_ALL_SURAHS');
+        }
+        reg.addEventListener('updatefound', () => {
+          reg.installing.addEventListener('statechange', e => {
+            if (e.target.state === 'activated') {
+              e.target.postMessage('CACHE_ALL_SURAHS');
+            }
+          });
+        });
+      });
+    }
+
+    // Offline / Online banner
+    const banner = document.createElement('div');
+    banner.id = 'offline-banner';
+    banner.style.cssText = 'display:none;position:fixed;bottom:0;left:0;right:0;background:#c0392b;color:#fff;text-align:center;padding:0.6rem;font-size:0.85rem;z-index:999;';
+    banner.textContent = '⚠️ You are offline — showing cached content';
+    document.body.appendChild(banner);
+
+    window.addEventListener('offline', () => banner.style.display = 'block');
+    window.addEventListener('online', () => banner.style.display = 'none');
+    if (!navigator.onLine) banner.style.display = 'block';
+  </script>
+</body>
+</html>

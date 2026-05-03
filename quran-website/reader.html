@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reader — Al-Quran</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+  <nav>
+    <a href="index.html" class="nav-logo">☽ Al-Quran</a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="surah.html">Surahs</a></li>
+      <li><a href="reader.html" class="active">Reader</a></li>
+      <li><a href="search.html">Search</a></li>
+      <li><a href="about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- CONTROLS -->
+  <div class="reader-controls">
+    <label for="surah-select" style="font-family:'Cinzel',serif;font-size:0.85rem;color:#555;letter-spacing:0.5px;">SURAH</label>
+    <select id="surah-select" onchange="loadSurah(this.value)">
+      <option value="">Select a Surah...</option>
+    </select>
+    <label for="trans-select" style="font-family:'Cinzel',serif;font-size:0.85rem;color:#555;letter-spacing:0.5px;">TRANSLATION</label>
+    <select id="trans-select" onchange="loadSurah(document.getElementById('surah-select').value)">
+      <option value="en.asad">Asad (English)</option>
+      <option value="en.pickthall">Pickthall (English)</option>
+      <option value="en.sahih">Sahih International</option>
+    </select>
+    <button class="btn btn-gold" onclick="loadSurah(document.getElementById('surah-select').value)">Read</button>
+  </div>
+
+  <!-- AYAH LIST -->
+  <div class="ayah-list" id="ayah-list">
+    <p style="text-align:center;color:#888;padding:4rem;font-style:italic;">Select a surah from the menu above to begin reading.</p>
+  </div>
+
+  <!-- PREV / NEXT -->
+  <div class="reader-nav" id="reader-nav" style="display:none;">
+    <button class="btn" id="prev-btn" onclick="navigateSurah(-1)">← Previous</button>
+    <button class="btn" id="next-btn" onclick="navigateSurah(1)">Next →</button>
+  </div>
+
+  <footer>
+    <p>Quran data provided by <a href="https://alquran.cloud" target="_blank">AlQuran.Cloud</a></p>
+  </footer>
+
+  <button id="back-top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+  <script>
+    let currentSurah = 1;
+
+    window.addEventListener('scroll', () => {
+      document.getElementById('back-top').style.display = window.scrollY > 300 ? 'block' : 'none';
+    });
+
+    // Populate surah dropdown
+    async function populateDropdown() {
+      const select = document.getElementById('surah-select');
+      try {
+        const res = await fetch('https://api.alquran.cloud/v1/surah');
+        const data = await res.json();
+        data.data.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.number;
+          opt.textContent = `${s.number}. ${s.englishName} (${s.name})`;
+          select.appendChild(opt);
+        });
+
+        // Check for URL param
+        const params = new URLSearchParams(window.location.search);
+        const surahParam = params.get('surah');
+        if (surahParam) {
+          select.value = surahParam;
+          loadSurah(surahParam);
+        }
+      } catch {
+        console.error('Failed to load surah list');
+      }
+    }
+
+    async function loadSurah(num) {
+      if (!num) return;
+      currentSurah = parseInt(num);
+      const trans = document.getElementById('trans-select').value;
+      const container = document.getElementById('ayah-list');
+      container.innerHTML = '<div class="loading"></div>';
+
+      try {
+        const res = await fetch(`https://api.alquran.cloud/v1/surah/${num}/editions/quran-simple,${trans}`);
+        const data = await res.json();
+        const arabicAyahs = data.data[0].ayahs;
+        const translAyahs = data.data[1].ayahs;
+        const surahName = data.data[1].englishName;
+        const revelationType = data.data[0].revelationType;
+
+        let html = `<div class="bismillah-reader">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>`;
+        html += `<p style="text-align:center;font-family:'Cinzel',serif;color:#1a5c45;margin-bottom:2rem;letter-spacing:1px;">${surahName} &bull; ${revelationType} &bull; ${arabicAyahs.length} Verses</p>`;
+
+        arabicAyahs.forEach((ayah, i) => {
+          html += `
+            <div class="ayah-card">
+              <span class="ayah-number">Ayah ${ayah.numberInSurah}</span>
+              <div class="ayah-arabic">${ayah.text}</div>
+              <div class="ayah-translation">${translAyahs[i].text}</div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+        document.getElementById('reader-nav').style.display = 'flex';
+        document.getElementById('prev-btn').disabled = currentSurah <= 1;
+        document.getElementById('next-btn').disabled = currentSurah >= 114;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch {
+        container.innerHTML = '<p style="color:#888;text-align:center;padding:2rem;">Failed to load surah. Please check your connection.</p>';
+      }
+    }
+
+    function navigateSurah(dir) {
+      const next = currentSurah + dir;
+      if (next < 1 || next > 114) return;
+      document.getElementById('surah-select').value = next;
+      loadSurah(next);
+    }
+
+    populateDropdown();
+  </script>
+</body>
+</html>
